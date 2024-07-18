@@ -1,0 +1,43 @@
+body {
+    background-image: url('img/images.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Styling for the input and button */
+.myInput {
+    display: block;
+    margin: 20px auto;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.myButton {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.myButton:hover {
+    background-color: #45a049;
+}
+
+/* Styling for the entry holder */
+#entryHolder {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#entryHolder div {
+    margin: 10px 0;
+    font-size: 20px;
+}
