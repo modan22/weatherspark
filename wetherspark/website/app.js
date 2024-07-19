@@ -1,74 +1,86 @@
-// Personal API Key for OpenWeatherMap API
-const apiKey = '<your_api_key>&units=imperial'; // Replace with your actual API key
+const apiKey = 'a1798b8da9d8e618da2e0d744fa4e88a'; 
 const baseURL = 'https://api.openweathermap.org/data/2.5/weather';
 
-// Event listener to add function to existing HTML DOM element
-document.getElementById('generate').addEventListener('click', handleGenerateClick);
 
-function handleGenerateClick(event) {
-    event.preventDefault();
-    const zipCode = document.getElementById('zip').value;
-    const userFeeling = document.getElementById('feelings').value;
+document.getElementById('generate').addEventListener('click', performAction);
 
-    if (zipCode && userFeeling) {
-        fetchWeatherData(zipCode)
-            .then(weatherData => {
-                if (weatherData) {
-                    const dataToPost = {
-                        temperature: weatherData.main.temp,
-                        date: new Date().toLocaleDateString(),
-                        userResponse: userFeeling
-                    };
-                    return postJournalEntry('/add', dataToPost);
-                } else {
-                    throw new Error('Weather data not found');
-                }
-            })
-            .then(() => updateJournalUI())
-            .catch(error => console.error('Error:', error));
-    } else {
-        alert('Please enter both a zip code and your feelings.');
-    }
-}
+function performAction(e) {
+  e.preventDefault();  // Prevent the default form submission behavior
 
-async function fetchWeatherData(zipCode) {
-    try {
-        const response = await fetch(`${baseURL}?zip=${zipCode}&appid=${apiKey}`);
-        const data = await response.json();
-        if (data.cod !== 200) {
-            console.error('Error fetching weather data:', data.message);
-            return null;
-        }
-        return data;
-    } catch (error) {
-        console.error('Fetch error:', error);
-        return null;
-    }
-}
+  const zip = document.getElementById('zip').value;
+  const feelings = document.getElementById('feelings').value;
 
-async function postJournalEntry(url, data) {
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+  if (!zip || !feelings) {
+    alert('Please enter both zip code and feelings.');
+    return;
+  }
+
+  console.log("Fetching weather for ZIP:", zip);
+  getWeather(baseURL, zip, apiKey)
+    .then(data => {
+      console.log("Weather data received:", data);
+      if (data && data.cod === 200) {
+        return postData('/add', {
+          temperature: data.main.temp,
+          date: new Date().toLocaleDateString(),
+          userResponse: feelings
         });
-        return response.json();
-    } catch (error) {
-        console.error('Error posting data:', error);
-    }
+      } else {
+        throw new Error(data.message || 'Error fetching weather data');
+      }
+    })
+    .then(() => updateUI())
+    .catch(error => console.log("Error:", error));
 }
 
-async function updateJournalUI() {
-    try {
-        const response = await fetch('/all');
-        const journalData = await response.json();
-        document.getElementById('temp').innerHTML = `Temperature: ${journalData.temperature}°F`;
-        document.getElementById('date').innerHTML = `Date: ${journalData.date}`;
-        document.getElementById('content').innerHTML = `Feelings: ${journalData.userResponse}`;
-    } catch (error) {
-        console.error('Error updating UI:', error);
+// Function to GET Web API Data
+const getWeather = async (baseURL, zip, apiKey) => {
+  try {
+    const res = await fetch(`${baseURL}?zip=${zip}&appid=${apiKey}&units=imperial`);
+    const data = await res.json();
+    console.log("API response:", data);
+    if (data.cod === 200) {
+      return data;
+    } else {
+      console.log("Error fetching weather data:", data.message);
+      return null;
     }
-}
+  } catch (error) {
+    console.log("Fetch error:", error);
+    return null;
+  }
+};
+
+// Function to POST data
+const postData = async (url = '', data = {}) => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    const newData = await response.json();
+    console.log("Data posted:", newData);
+    return newData;
+  } catch (error) {
+    console.log("Error posting data:", error);
+  }
+};
+
+// Function to GET Project Data and update UI
+const updateUI = async () => {
+  try {
+    const request = await fetch('/all');
+    const allData = await request.json();
+    console.log("UI data:", allData);
+    document.getElementById('temp').innerHTML = `Temperature: ${allData.temperature || 'N/A'}°F`;
+    document.getElementById('date').innerHTML = `Date: ${allData.date || 'N/A'}`;
+    document.getElementById('content').innerHTML = `Feelings: ${allData.userResponse || 'N/A'}`;
+  } catch (error) {
+    console.log("Update UI error:", error);
+  }
+};
